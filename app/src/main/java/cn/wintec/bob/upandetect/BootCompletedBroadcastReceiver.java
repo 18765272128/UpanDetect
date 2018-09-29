@@ -3,6 +3,10 @@ package cn.wintec.bob.upandetect;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import java.io.File;
@@ -30,41 +34,31 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
     private static String Upan_Mount = "android.intent.action.MEDIA_MOUNTED";
 
     private static String Upan_Dir = "udisk0";
+    private static String Folder_Name = "ApkShellWintec";
     private static String Upan_Path;
-    private static String APK_Dir = "Mydir";
-    private static String APK_Path;
-    private List<String> FileList;
+
+    Context mcontext;
     @Override
     public void onReceive(Context context, Intent intent) {
+        mcontext = context;
         String maction = intent.getAction();
         Log.e(TAG, "In the Broadcast receiver class， Action = " + maction);
         if(maction == Action_boot ) {
             Intent mint = new Intent(context, UpanService.class);
             context.startService(mint);
         }else  if (maction == Upan_Mount){
-            Log.e(TAG, "str = " + intent.getData().getPath());
-            Upan_Path = intent.getData().getPath() + "/" + Upan_Dir;
-            APK_Path = Upan_Path + "/" + APK_Dir;
-            getFilesAllName(APK_Path);
-        }
-    }
-
-    private boolean getFilesAllName(String strFolder){
-        File file = new File(strFolder);
-        if (!file.exists()) {
-            Log.e(TAG, "The dir is not exist");
-            return false;
-        }
-        File[] files=file.listFiles();
-        if (files.length == 0){
-            Log.e(TAG, "The dir is empty");
-            return false;
-        }
-        FileList = new ArrayList<>();
-        for(int i = 0; i<files.length; i++){
-            FileList.add(files[i].getAbsolutePath());
+//            intent.getData().getPath();
+            Upan_Path = intent.getData().getPath();
+            File file = new File(Upan_Path + "/" + Upan_Dir + "/" + Folder_Name);
+            if (file.exists()) {
+                Intent mint = new Intent(context, MainActivity.class);
+                mint.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mint.putExtra("Udisk_path", Upan_Path);
+                context.startActivity(mint);
+            }
         }
 
-        return true;
     }
+
+
 }

@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="cn.wintec.bob.upandetect">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INSTALL_PACKAGES"
+        tools:ignore="ProtectedPermissions" />
 
 
     <application
@@ -13,7 +16,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/dialog"
+        >
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +29,8 @@
         <service
             android:name=".UpanService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true">
+        </service>
 
         <receiver android:name=".BootCompletedBroadcastReceiver"
             android:enabled="true"
@@ -36,7 +41,6 @@
                 <action android:name="android.intent.action.MEDIA_CHECKING"/>
                 <action android:name="android.intent.action.MEDIA_UNMOUNTABLE"/>
                 <data android:scheme="file" />
-                <!--<category android:name="android.intent.category.DEFAULT"/>-->
             </intent-filter>
         </receiver>
     </application>

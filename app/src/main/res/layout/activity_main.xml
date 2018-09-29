@@ -4,21 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/startserver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="start server"/>
-    <Button
-        android:id="@+id/stopserver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="stop server"/>
+    <ListView
+        android:id="@+id/mlv1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/getfilename"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="get file list"/>
+    </ListView>
 </LinearLayout>  
 
