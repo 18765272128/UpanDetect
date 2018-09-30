@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.nfc.Tag;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -16,8 +17,14 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +36,13 @@ public class MainActivity extends AppCompatActivity {
      * The TAG Used for Log
      */
     private static String TAG = "bob";
-
-    private static String Upan_Dir = "udisk0";
-    private static String Upan_Path;
-    private static String APK_Dir = "Mydir";
-    private static String APK_Path;
-    private static String FailMesg;
+    private static String App_Folder = "";
+    private static String Shell_Folder = "";
+    private static String Shell_Name = "shell";
+    private static String FailMesg = "";
     private List<String> FileList;
     private List<String> AppFail;
+    ArrayList<HashMap<String, Object>> listItem;
 
 
     CommandExecution CmdExe;
@@ -50,49 +56,70 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setFinishOnTouchOutside(true);
         mlv1 = (ListView) findViewById(R.id.mlv1);
-
-
-        InstallAllTheAPP();
-
-
+        Intent mint = getIntent();
+        App_Folder = mint.getStringExtra("App_Folder");
+        Shell_Folder = mint.getStringExtra("Shell_Folder");
+        Log.e(TAG, "App folder name is  " + App_Folder);
+        Log.e(TAG, "Shell folder name is  " + Shell_Folder);
+//        List<String> mst = ReadFileByLine(Shell_Folder + "/" + Shell_Name);
+//        for(int i = 0; i < mst.size(); i++){
+//            Log.e(TAG,  i + " = " + mst.get(i));
+//        }
+        if (!TextUtils.isEmpty(App_Folder)) {
+            InstallAllTheAPP(App_Folder);
+        }
+        if (!TextUtils.isEmpty(Shell_Folder))
+            RunTheShellFile(Shell_Folder + "/" + Shell_Name);
     }
 
-    private void InstallAllTheAPP(){
-        if(getFilesAllName("/mnt/usb_storage/USB_DISK1/udisk0/Mydir")){
-//            ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, FileList);
-//            mlv1.setAdapter(adapter);
-            ArrayList<HashMap<String, Object>> listItem = new ArrayList<HashMap<String, Object>>();
-            for(int i = 0; i < FileList.size(); i++){
+    /**
+     * Install all the app in the specified folder
+     */
+    private void InstallAllTheAPP(String mfoler_path) {
+        if (getFilesAllName(mfoler_path)) {
+            listItem = new ArrayList<HashMap<String, Object>>();
+            HashMap<String, Object> map1 = new HashMap<String, Object>();
+            map1.put("appName", "App Name");
+            map1.put("failReason", "Failed Reason");
+            listItem.add(map1);
+            for (int i = 0; i < FileList.size(); i++) {
                 String mApp = FileList.get(i);
-                if(!mInstallOneApp(mApp)){
+                if (!mInstallOneApp(mApp)) {
                     HashMap<String, Object> map = new HashMap<String, Object>();
                     FailMesg = GetReturnMesg(CmdRes.errorMsg);
-                    map.put("appName", mApp.substring(40));
-                    map.put("failReason",FailMesg);
+                    /* /mnt/usb_storage/USB_DISK1/udisk0/ApkToInstallWintec/ */
+                    map.put("appName", mApp.substring(53));
+                    map.put("failReason", FailMesg);
                     listItem.add(map);
                 }
             }
-            if( !listItem.isEmpty() ){
-                SimpleAdapter adapter1 = new SimpleAdapter(this, listItem, R.layout.itemlist, new String[]{"appName", "failReason"}, new int[]{R.id.appname, R.id.failreason});
-                mlv1.setAdapter(adapter1);
-
-            }
         }
+        if (listItem != null) {
+            SimpleAdapter adapter1 = new SimpleAdapter(this, listItem, R.layout.itemlist, new String[]{"appName", "failReason"}, new int[]{R.id.appname, R.id.failreason});
+            mlv1.setAdapter(adapter1);
+        }
+        Log.e(TAG, "Install completed");
     }
 
-    private String GetReturnMesg(String mString){
+    /**
+     * Return the failed reason according to the mString
+     *
+     * @param mString: The failed message returned by the CMD executed class
+     * @return: The reason of failure
+     */
+    private String GetReturnMesg(String mString) {
         String ret;
-        if(mString.contains("INSTALL_FAILED_INVALID_APK"))
+        if (mString.contains("INSTALL_FAILED_INVALID_APK"))
             ret = "Invalid Apk";
-        else if(mString.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE"))
+        else if (mString.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE"))
             ret = "Incompatible Update";
-        else if(mString.contains("INSTALL_PARSE_FAILED_BAD_MANIFEST"))
+        else if (mString.contains("INSTALL_PARSE_FAILED_BAD_MANIFEST"))
             ret = "Bad Manifest";
-        else if(mString.contains("INSTALL_PARSE_FAILED_BAD_PACKAGE_NAME"))
+        else if (mString.contains("INSTALL_PARSE_FAILED_BAD_PACKAGE_NAME"))
             ret = "Bad Package Name";
-        else if(mString.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES"))
+        else if (mString.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES"))
             ret = "Inconsistent Certificates";
-        else if(mString.contains("INSTALL_PARSE_FAILED_NOT_APK"))
+        else if (mString.contains("INSTALL_PARSE_FAILED_NOT_APK"))
             ret = "Not Apk";
         else
             ret = "Unknown Reason";
@@ -100,15 +127,68 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Install App
+     * Run the shell file in the specified folder.
+     *
+     * @param mshell: The absolute path of the shell file.
+     * @return; Return value.
      */
-    private boolean mInstallOneApp(String mAppName){
-//        apkInfo(mAppName);
+    private boolean RunTheShellFile(String mshell) {
+        Log.e(TAG, "Begin to Run the Shell， file =  " + mshell);
+
+
+        List<String> mst = ReadFileByLine(mshell);
+        CmdExe = new CommandExecution();
+        for (int i = 0; i < mst.size(); i++) {
+            Log.e(TAG, "size = " + mst.size());
+            Log.e(TAG, i + " = " + mst.get(i));
+            CmdRes = CmdExe.execCommand(mst.get(i), true);
+            Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
+
+        }
+        return CmdRes.result != 1;
+
+    }
+
+    /**
+     * Install the app specified by the mAppNmae
+     *
+     * @param mAppName: The absolute path of App, Path + name
+     * @return: Install succeed of failed. Succeed return true,or false
+     */
+    private boolean mInstallOneApp(String mAppName) {
         CmdExe = new CommandExecution();
         CmdRes = CmdExe.execCommand("pm install -rf " + mAppName, true);
         Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
         if (CmdRes.result == 1) return false;
-        else      return true;
+        else return true;
+    }
+
+    private List<String> ReadFileByLine(String mfile) {
+        List newList = new ArrayList<String>();
+        String[] mret = {};
+        File file = new File(mfile);
+        int mcount = 0;
+        try {
+            if (file.isFile() && file.exists()) {
+                InputStreamReader isr = new InputStreamReader(new FileInputStream(file));
+                BufferedReader br = new BufferedReader(isr);
+                String linetxt = null;
+                while ((linetxt = br.readLine()) != null) {
+                    if (!"".equals(linetxt)) {
+                        newList.add(mcount, linetxt);
+                        mcount++;
+                    }
+                }
+                isr.close();
+                br.close();
+            } else {
+                Toast.makeText(getApplicationContext(), "Can not find file", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return newList;
     }
 
     /**
@@ -145,20 +225,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private boolean getFilesAllName(String strFolder){
+    /**
+     * Get all the file name in the specified folder.
+     *
+     * @param strFolder: The absolute path of the specified folder
+     * @return: Return true if the folder is not empty, or return false.
+     */
+    private boolean getFilesAllName(String strFolder) {
+        if (strFolder.equals(""))
+            return false;
         File file = new File(strFolder);
         if (!file.exists()) {
             Log.e(TAG, "The dir is not exist");
             return false;
         }
-        File[] files=file.listFiles();
-        if (files.length == 0){
+        File[] files = file.listFiles();
+        if (files.length == 0) {
             Log.e(TAG, "The dir is empty");
             return false;
         }
         FileList = new ArrayList<>();
-        File[] files1 = new File[0];
-        for(int i = 0; i<files.length; i++){
+        for (int i = 0; i < files.length; i++) {
             FileList.add(files[i].getAbsolutePath());
         }
         return true;
