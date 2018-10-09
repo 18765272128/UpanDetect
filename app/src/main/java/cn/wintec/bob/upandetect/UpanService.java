@@ -22,20 +22,18 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
+/**
+ * Created by wyb on 2018/9/25.
+ * 接收到U盘广播后调用该服务，完成安装apk和执行脚本
+ */
 public class UpanService extends Service {
 
     private static String TAG = "bob";
-
     private static String App_Folder = "";
     private static String Shell_Folder = "";
     private static String Shell_Name = "shell";
     private static String FailMesg = "";
     private List<String> FileList;
-    private List<String> AppFail;
-    ArrayList<HashMap<String, Object>> listItem;
-
-
     CommandExecution CmdExe;
     CommandExecution.CommandResult CmdRes;
 
@@ -62,12 +60,10 @@ public class UpanService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.e(TAG, "In the onStartCommand");
-
-//        Intent mint = this.getIntent();
         App_Folder = intent.getStringExtra("App_Folder");
         Shell_Folder = intent.getStringExtra("Shell_Folder");
-        Log.e(TAG, "App folder name is  " + App_Folder);
-        Log.e(TAG, "Shell folder name is  " + Shell_Folder);
+//        Log.e(TAG, "App folder name is  " + App_Folder);
+//        Log.e(TAG, "Shell folder name is  " + Shell_Folder);
 
         if (!TextUtils.isEmpty(App_Folder)) {
             InstallAllTheAPP(App_Folder);
@@ -91,27 +87,17 @@ public class UpanService extends Service {
      */
     private void InstallAllTheAPP(String mfoler_path) {
         if (getFilesAllName(mfoler_path)) {
-//            listItem = new ArrayList<HashMap<String, Object>>();
-//            HashMap<String, Object> map1 = new HashMap<String, Object>();
-//            map1.put("appName", "App Name");
-//            map1.put("failReason", "Failed Reason");
-//            listItem.add(map1);
             String[] mstr1 = new String[FileList.size()];
-
             int m = 0;
             for (int i = 0; i < FileList.size(); i++) {
                 String mApp = FileList.get(i);
                 if (!mInstallOneApp(mApp)) {
-//                    HashMap<String, Object> map = new HashMap<String, Object>();
                     FailMesg = GetReturnMesg(CmdRes.errorMsg);
-                    Log.e(TAG, " i = " + i + " M*2 = " + m*2 + " M*2+1 = " + m*2+3 );
+//                    Log.e(TAG, " i = " + i + " M*2 = " + m*2 + " M*2+1 = " + m*2+3 );
                     /* /mnt/usb_storage/USB_DISK1/udisk0/ApkToInstallWintec/ */
                     mstr1[m*2] = mApp.substring(53);
                     mstr1[m*2 + 1] = FailMesg;
                     m++;
-//                    map.put("appName", mApp.substring(53));
-//                    map.put("failReason", FailMesg);
-//                    listItem.add(map);
                 }
             }
             if(mstr1.length >= 1 && mstr1[0] != null){
@@ -122,17 +108,6 @@ public class UpanService extends Service {
             }
 
         }
-//        if (listItem != null) {
-//            SimpleAdapter adapter1 = new SimpleAdapter(this, listItem, R.layout.itemlist, new String[]{"appName", "failReason"}, new int[]{R.id.appname, R.id.failreason});
-//            mlv1.setAdapter(adapter1);
-//            Intent mint = new Intent(UpanService.this, MainActivity.class);
-//            mint.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            for(int i =0; i < listItem.size(); i++ ){
-//                mstr[i] = listItem.get(i).;
-//            }
-//            mint.putStringArrayListExtra("AppInstallFailed", listItem);
-
-//        }
         Log.e(TAG, "Install completed");
     }
 
@@ -174,10 +149,10 @@ public class UpanService extends Service {
         List<String> mst = ReadFileByLine(mshell);
         CmdExe = new CommandExecution();
         for (int i = 0; i < mst.size(); i++) {
-            Log.e(TAG, "size = " + mst.size());
-            Log.e(TAG, i + " = " + mst.get(i));
+//            Log.e(TAG, "size = " + mst.size());
+//            Log.e(TAG, i + " = " + mst.get(i));
             CmdRes = CmdExe.execCommand(mst.get(i), true);
-            Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
+//            Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
 
         }
         return CmdRes.result != 1;
@@ -193,7 +168,7 @@ public class UpanService extends Service {
     private boolean mInstallOneApp(String mAppName) {
         CmdExe = new CommandExecution();
         CmdRes = CmdExe.execCommand("pm install -rf " + mAppName, true);
-        Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
+//        Log.e(TAG, "1:" + CmdRes.result + "  2:" + CmdRes.errorMsg + " 3:" + CmdRes.successMsg);
         if (CmdRes.result == 1) return false;
         else return true;
     }
@@ -228,7 +203,6 @@ public class UpanService extends Service {
 
     /**
      * 获APK包的信息:版本号,名称,图标 等..
-     *
      * @param usbPath APK包的绝对路径
      */
     private void apkInfo(String usbPath) {
@@ -242,12 +216,10 @@ public class UpanService extends Service {
             appInfo.publicSourceDir = usbPath;
             // 得到应用名
             String appName = pm.getApplicationLabel(appInfo).toString();
-//            this.appName = appName;
             // 得到包名
             String packageName = appInfo.packageName;
             // 得到版本信息
             String version = pkgInfo.versionName;
-//            this.version = version;
         /* icon1和icon2其实是一样的 */
             Drawable icon1 = pm.getApplicationIcon(appInfo);// 得到图标信息
             Drawable icon2 = appInfo.loadIcon(pm);

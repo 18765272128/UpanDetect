@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by adc on 2018/9/25.
+ * Created by wyb on 2018/9/25.
  * Get the broadcast of the Udisk install and mount, then get the path of the udisk that has been mount.
  * Send the **App Folder Path & Shell Folder Path** to the MainActivity through Intent.
  */
@@ -25,7 +25,6 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
      * The TAG Used for Log
      */
     private static String TAG = "bob";
-
     /**
      * The Boot Completed action
      */
@@ -40,8 +39,6 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
     private static String App_Folder = "ApkToInstallWintec";
     /*The folder name that saves the shell to exe */
     private static String Shell_Folder = "ShellToExeWintec";
-//    /**/
-//    private static String Shell_name = "Shell";
     /* The absolute path of Udisk has been mounted*/
     private static String Upan_Path;
 
@@ -70,6 +67,5 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
         }
 
     }
-
 
 }
