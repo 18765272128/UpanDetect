@@ -53,19 +53,19 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
         Log.e(TAG, "In the Broadcast receiver class， Action = " + maction);
         if (maction == Action_boot) {
             Intent mint = new Intent(context, UpanService.class);
-            context.startService(mint);
+//            context.startService(mint);
         } else if (maction == Upan_Mount) {
             Upan_Path = intent.getData().getPath();
             File app_folder = new File(Upan_Path + "/" + Upan_Dir + "/" + App_Folder);
             File shell_folder = new File(Upan_Path + "/" + Upan_Dir + "/" + Shell_Folder);
             if (app_folder.exists() || shell_folder.exists()) {
-                Intent mint = new Intent(context, MainActivity.class);
+                Intent mint = new Intent(context, UpanService.class);
                 mint.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 if (app_folder.exists())
                     mint.putExtra("App_Folder", Upan_Path + "/" + Upan_Dir + "/" + App_Folder);
                 if (shell_folder.exists())
                     mint.putExtra("Shell_Folder", Upan_Path + "/" + Upan_Dir + "/" + Shell_Folder);
-                context.startActivity(mint);
+                context.startService(mint);
             }
         }
 
